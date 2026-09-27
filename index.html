@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2f4183">
+    <title>Session Clock</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <main class="session-view" aria-labelledby="page-title">
+      <header class="title-banner">
+        <img id="title-image" class="title-banner-image" alt="" hidden>
+        <h1 id="page-title" class="title-banner-text">Parent's Evening</h1>
+        <p id="image-error" class="image-error" role="alert" hidden>
+          The title image could not be loaded.
+        </p>
+      </header>
+
+      <section class="session-indicator" aria-live="polite" aria-atomic="true">
+        <div class="session-panel">
+          <p id="session-label" class="session-label">Checking the schedule...</p>
+          <p id="session-count" class="session-count">—</p>
+          <p id="session-detail" class="session-detail"></p>
+        </div>
+      </section>
+
+      <section id="settings-view" class="settings-view" aria-labelledby="settings-heading" hidden>
+        <form id="settings-form" class="settings-panel">
+          <h2 id="settings-heading">Settings</h2>
+
+          <label class="settings-label" for="title-input">Title</label>
+          <input
+            id="title-input"
+            class="settings-input"
+            name="title"
+            type="text"
+            maxlength="100"
+            required
+          >
+
+          <label class="settings-label" for="logo-input">Logo image URL (optional)</label>
+          <input id="logo-input" class="settings-input" name="logo" type="url">
+
+          <label class="settings-label" for="start-input">Start time</label>
+          <input id="start-input" class="settings-input" name="start" type="time" required>
+
+          <label class="settings-label" for="end-input">End time</label>
+          <input id="end-input" class="settings-input" name="end" type="time" required>
+
+          <label class="settings-label" for="duration-input">Session duration (minutes)</label>
+          <input
+            id="duration-input"
+            class="settings-input"
+            name="duration"
+            type="number"
+            min="1"
+            max="1440"
+            step="1"
+            required
+          >
+
+          <p id="settings-error" class="settings-error" role="alert"></p>
+
+          <div class="settings-actions">
+            <button class="settings-save-button" type="submit">Save</button>
+            <button id="settings-test-bell" class="settings-test-button" type="button">
+              Test bell
+            </button>
+            <button id="settings-cancel" class="settings-cancel-button" type="button">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <div class="button-container">
+        <time id="current-time" class="current-time" aria-label="Current time">--:--</time>
+        <button id="sound-toggle" class="sound-toggle" type="button" aria-pressed="false">
+          Enable session bell
+        </button>
+        <button
+          id="settings-toggle"
+          class="settings-toggle"
+          type="button"
+          aria-controls="settings-view"
+          aria-expanded="false"
+        >
+          Open settings
+        </button>
+        <button
+          id="fullscreen-toggle"
+          class="fullscreen-toggle"
+          type="button"
+          aria-pressed="false"
+        >
+          Enter full screen and keep screen awake
+        </button>
+        <p id="sound-status" class="sound-status">
+          Enable sound once so your browser can play the bell automatically.
+        </p>
+      </div>
+
+      <p id="presentation-status" class="presentation-status" role="status"></p>
+      <p id="schedule-summary" class="schedule"></p>
+    </main>
+
+    <audio id="session-bell" preload="auto">
+      <source src="resources/bell.mp3" type="audio/mpeg">
+    </audio>
+  </body>
+</html>

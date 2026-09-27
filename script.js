@@ -1,0 +1,496 @@
+const defaultSchedule = {
+  sessionDurationMinutes: 5,
+  scheduleStartTime: "16:00",
+  scheduleEndTime: "19:30",
+};
+const defaultTitle = "Parent's Evening";
+const renderIntervalMilliseconds = 2_000;
+const { schedule, title, logoUrl, configurationErrors } = getConfigFromQueryString();
+
+const currentTime = document.querySelector("#current-time");
+const pageTitle = document.querySelector("#page-title");
+const titleImage = document.querySelector("#title-image");
+const imageError = document.querySelector("#image-error");
+const sessionIndicator = document.querySelector(".session-indicator");
+const sessionLabel = document.querySelector("#session-label");
+const sessionCount = document.querySelector("#session-count");
+const sessionDetail = document.querySelector("#session-detail");
+const scheduleSummary = document.querySelector("#schedule-summary");
+const soundToggle = document.querySelector("#sound-toggle");
+const soundStatus = document.querySelector("#sound-status");
+const sessionBell = document.querySelector("#session-bell");
+const settingsToggle = document.querySelector("#settings-toggle");
+const fullscreenToggle = document.querySelector("#fullscreen-toggle");
+const presentationStatus = document.querySelector("#presentation-status");
+const settingsView = document.querySelector("#settings-view");
+const settingsForm = document.querySelector("#settings-form");
+const settingsCancel = document.querySelector("#settings-cancel");
+const settingsTestBell = document.querySelector("#settings-test-bell");
+const settingsError = document.querySelector("#settings-error");
+const titleInput = document.querySelector("#title-input");
+const logoInput = document.querySelector("#logo-input");
+const startInput = document.querySelector("#start-input");
+const endInput = document.querySelector("#end-input");
+const durationInput = document.querySelector("#duration-input");
+
+const timeFormatter = new Intl.DateTimeFormat("en-GB", {
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+
+const [startHour, startMinute] = parseTime(schedule.scheduleStartTime);
+const [endHour, endMinute] = parseTime(schedule.scheduleEndTime);
+const sessionDurationMs = schedule.sessionDurationMinutes * 60 * 1000;
+pageTitle.textContent = title;
+document.title = `${title} – Session Clock`;
+if (logoUrl) {
+  titleImage.src = logoUrl;
+  titleImage.hidden = false;
+}
+scheduleSummary.textContent =
+  `${schedule.sessionDurationMinutes}-minute sessions · ` +
+  `${schedule.scheduleStartTime}–${schedule.scheduleEndTime}`;
+titleInput.value = title;
+logoInput.value = logoUrl;
+startInput.value = schedule.scheduleStartTime;
+endInput.value = schedule.scheduleEndTime;
+durationInput.value = String(schedule.sessionDurationMinutes);
+let soundEnabled = true;
+let lastObservedSessionIndex;
+let wakeLock = null;
+let presentationModeRequested = false;
+let presentationSyncTimer;
+
+function getConfigFromQueryString() {
+  const query = new URLSearchParams(window.location.search);
+  const schedule = { ...defaultSchedule };
+  let title = defaultTitle;
+  let logoUrl = "";
+  const configurationErrors = [];
+  const requestedTitle = query.get("title");
+  const requestedLogo = query.get("logo");
+  const start = query.get("start");
+  const end = query.get("end");
+  const duration = query.get("duration");
+
+  if (requestedTitle !== null) {
+    const trimmedTitle = requestedTitle.trim();
+    if (trimmedTitle.length >= 1 && trimmedTitle.length <= 100) {
+      title = trimmedTitle;
+    } else {
+      configurationErrors.push('“title” must contain 1 to 100 characters.');
+    }
+  }
+
+  if (requestedLogo) {
+    if (isHttpUrl(requestedLogo)) {
+      logoUrl = requestedLogo;
+    } else {
+      configurationErrors.push('“logo” must be an HTTP or HTTPS URL.');
+    }
+  }
+
+  if (start !== null) {
+    if (isCompactClockTime(start)) {
+      schedule.scheduleStartTime = expandClockTime(start);
+    } else {
+      configurationErrors.push('“start” must use 24-hour HHmm format.');
+    }
+  }
+
+  if (end !== null) {
+    if (isCompactClockTime(end)) {
+      schedule.scheduleEndTime = expandClockTime(end);
+    } else {
+      configurationErrors.push('“end” must use 24-hour HHmm format.');
+    }
+  }
+
+  if (duration !== null) {
+    const parsedDuration = Number(duration);
+    if (/^\d+$/.test(duration) && parsedDuration >= 1 && parsedDuration <= 1_440) {
+      schedule.sessionDurationMinutes = parsedDuration;
+    } else {
+      configurationErrors.push('“duration” must be a whole number from 1 to 1440.');
+    }
+  }
+
+  if (
+    configurationErrors.length === 0 &&
+    minutesSinceMidnight(schedule.scheduleEndTime) <=
+      minutesSinceMidnight(schedule.scheduleStartTime)
+  ) {
+    configurationErrors.push('“end” must be later than “start”.');
+  }
+
+  return { schedule, title, logoUrl, configurationErrors };
+}
+
+function isHttpUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function isCompactClockTime(value) {
+  return /^(?:[01]\d|2[0-3])[0-5]\d$/.test(value);
+}
+
+function expandClockTime(value) {
+  return `${value.slice(0, 2)}:${value.slice(2)}`;
+}
+
+function minutesSinceMidnight(value) {
+  const [hour, minute] = parseTime(value);
+  return hour * 60 + minute;
+}
+
+function parseTime(value) {
+  return value.split(":").map(Number);
+}
+
+function timeOnSameDay(now, hour, minute) {
+  const time = new Date(now);
+  time.setHours(hour, minute, 0, 0);
+  return time;
+}
+
+function getScheduleState(now) {
+  const start = timeOnSameDay(now, startHour, startMinute);
+  const end = timeOnSameDay(now, endHour, endMinute);
+  const totalSessions = Math.ceil((end - start) / sessionDurationMs);
+
+  if (now < start) {
+    const minutesUntilStart = Math.ceil((start - now) / (60 * 1000));
+    return { phase: "before", minutesUntilStart, totalSessions };
+  }
+
+  if (now >= end) {
+    return { phase: "after", totalSessions };
+  }
+
+  const sessionIndex = Math.floor((now - start) / sessionDurationMs);
+  const sessionStart = new Date(start.getTime() + sessionIndex * sessionDurationMs);
+  const sessionEnd = new Date(
+    Math.min(start.getTime() + (sessionIndex + 1) * sessionDurationMs, end.getTime()),
+  );
+
+  return {
+    phase: "active",
+    sessionIndex,
+    sessionStart,
+    sessionEnd,
+    totalSessions,
+  };
+}
+
+function playBell() {
+  sessionBell.currentTime = 0;
+  sessionBell.play().catch((error) => {
+    soundEnabled = false;
+    updateSoundControls(`The bell could not play: ${error.message}`);
+  });
+}
+
+function updateSoundControls(message) {
+  soundToggle.setAttribute("aria-pressed", String(soundEnabled));
+  soundToggle.textContent = soundEnabled ? "Session bell enabled" : "Enable session bell";
+  soundStatus.textContent =
+    message ??
+    (soundEnabled
+      ? "The bell will play when each new session starts."
+      : "Enable sound once so your browser can play the bell automatically.");
+}
+
+function setSettingsOpen(isOpen) {
+  settingsView.hidden = !isOpen;
+  settingsToggle.setAttribute("aria-expanded", String(isOpen));
+  settingsToggle.textContent = isOpen ? "Close settings" : "Open settings";
+  settingsError.textContent = "";
+
+  if (isOpen) {
+    titleInput.focus();
+  }
+}
+
+function compactClockTime(value) {
+  return value.replace(":", "");
+}
+
+function isBrowserFullscreen() {
+  const fullscreenTolerancePixels = 5;
+  return (
+    Math.abs(window.innerWidth - window.screen.width) <= fullscreenTolerancePixels &&
+    Math.abs(window.innerHeight - window.screen.height) <= fullscreenTolerancePixels
+  );
+}
+
+function isFullscreenActive() {
+  return Boolean(document.fullscreenElement) || isBrowserFullscreen();
+}
+
+function updatePresentationControls(message = "") {
+  const isFullscreen = isFullscreenActive();
+  const isManualBrowserFullscreen = isBrowserFullscreen() && !document.fullscreenElement;
+  fullscreenToggle.setAttribute("aria-pressed", String(isFullscreen));
+  fullscreenToggle.textContent = isManualBrowserFullscreen
+    ? "Full screen active; press F11 to exit"
+    : isFullscreen
+      ? "Exit full screen"
+      : "Enter full screen and keep screen awake";
+  fullscreenToggle.title = fullscreenToggle.textContent;
+  presentationStatus.textContent = message;
+}
+
+async function requestWakeLock() {
+  if (!navigator.wakeLock) {
+    return {
+      acquired: false,
+      message: "Full screen is active. This browser does not support screen wake lock.",
+    };
+  }
+
+  try {
+    wakeLock = await navigator.wakeLock.request("screen");
+    const acquiredLock = wakeLock;
+    acquiredLock.addEventListener("release", () => {
+      if (wakeLock === acquiredLock) {
+        wakeLock = null;
+      }
+
+      if (presentationModeRequested && document.visibilityState === "visible") {
+        updatePresentationControls("The browser released the screen wake lock.");
+      }
+    });
+    return { acquired: true, message: "Full screen and screen wake lock are active." };
+  } catch (error) {
+    wakeLock = null;
+    return {
+      acquired: false,
+      message: `Full screen is active, but screen wake lock failed: ${error.message}`,
+    };
+  }
+}
+
+async function releaseWakeLock() {
+  const lockToRelease = wakeLock;
+  wakeLock = null;
+
+  if (lockToRelease && !lockToRelease.released) {
+    await lockToRelease.release();
+  }
+}
+
+async function enterPresentationMode() {
+  if (!document.documentElement.requestFullscreen) {
+    updatePresentationControls("Full screen is not supported by this browser.");
+    return;
+  }
+
+  try {
+    await document.documentElement.requestFullscreen();
+    if (!document.fullscreenElement) {
+      presentationModeRequested = false;
+      updatePresentationControls("Full screen closed before screen wake lock could be requested.");
+      return;
+    }
+    presentationModeRequested = true;
+    presentationModeRequested = true;
+    updatePresentationControls();
+  } catch (error) {
+    presentationModeRequested = false;
+    updatePresentationControls(`Could not enter full screen: ${error.message}`);
+  }
+}
+
+async function exitPresentationMode() {
+  presentationModeRequested = false;
+
+  try {
+    await releaseWakeLock();
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+    }
+    updatePresentationControls("Full screen closed and screen wake lock released.");
+  } catch (error) {
+    updatePresentationControls(`Could not exit presentation mode: ${error.message}`);
+  }
+}
+
+async function syncPresentationMode() {
+  if (isFullscreenActive()) {
+    presentationModeRequested = true;
+    updatePresentationControls();
+
+    if (document.visibilityState === "visible" && (!wakeLock || wakeLock.released)) {
+      const wakeLockResult = await requestWakeLock();
+      updatePresentationControls(wakeLockResult.message);
+    }
+    return;
+  }
+
+  presentationModeRequested = false;
+  await releaseWakeLock();
+  updatePresentationControls();
+}
+
+function render() {
+  const now = new Date();
+  const state = configurationErrors.length === 0 ? getScheduleState(now) : null;
+  currentTime.textContent = timeFormatter.format(now);
+  currentTime.dateTime = now.toISOString();
+
+  if (configurationErrors.length > 0) {
+    sessionIndicator.dataset.phase = "error";
+    sessionLabel.textContent = "Configuration error";
+    sessionCount.textContent = "Check URL";
+    sessionDetail.textContent = configurationErrors.join(" ");
+    scheduleSummary.textContent = "Invalid schedule";
+  } else if (state.phase === "before") {
+    const minuteUnit = state.minutesUntilStart === 1 ? "minute" : "minutes";
+    sessionIndicator.dataset.phase = state.phase;
+    sessionLabel.textContent =
+      `First session will start in ${state.minutesUntilStart} ${minuteUnit}`;
+    sessionCount.textContent = "";
+    sessionDetail.textContent = "";
+  } else if (state.phase === "after") {
+    sessionIndicator.dataset.phase = state.phase;
+    sessionLabel.textContent = "All sessions have finished";
+    sessionCount.textContent = "";
+    sessionDetail.textContent = "";
+  } else {
+    sessionIndicator.dataset.phase = state.phase;
+    sessionLabel.textContent = "Session started at";
+    sessionCount.textContent = timeFormatter.format(state.sessionStart);
+    sessionDetail.textContent = `Ends at ${timeFormatter.format(state.sessionEnd)}`;
+  }
+
+  const observedSessionIndex =
+    configurationErrors.length === 0 && state.phase === "active" ? state.sessionIndex : null;
+  const sessionChanged =
+    lastObservedSessionIndex !== undefined &&
+    observedSessionIndex !== null &&
+    observedSessionIndex !== lastObservedSessionIndex;
+  const finalSessionEnded =
+    lastObservedSessionIndex !== undefined &&
+    lastObservedSessionIndex !== null &&
+    state.phase === "after";
+  if ((sessionChanged || finalSessionEnded) && soundEnabled) {
+    playBell();
+  }
+  lastObservedSessionIndex = observedSessionIndex;
+}
+
+soundToggle.addEventListener("click", () => {
+  soundEnabled = !soundEnabled;
+  if (!soundEnabled) {
+    sessionBell.pause();
+    sessionBell.currentTime = 0;
+  }
+  updateSoundControls();
+});
+
+settingsToggle.addEventListener("click", () => {
+  setSettingsOpen(settingsView.hidden);
+});
+
+settingsCancel.addEventListener("click", () => {
+  setSettingsOpen(false);
+});
+
+settingsTestBell.addEventListener("click", () => {
+  playBell();
+});
+
+fullscreenToggle.addEventListener("click", () => {
+  if (document.fullscreenElement) {
+    void exitPresentationMode();
+  } else if (isBrowserFullscreen()) {
+    updatePresentationControls("Press F11 to exit browser full screen.");
+  } else {
+    void enterPresentationMode();
+  }
+});
+
+document.addEventListener("fullscreenchange", () => {
+  void syncPresentationMode().catch((error) => {
+    updatePresentationControls(`Presentation mode update failed: ${error.message}`);
+  });
+});
+
+window.addEventListener("resize", () => {
+  window.clearTimeout(presentationSyncTimer);
+  presentationSyncTimer = window.setTimeout(() => {
+    void syncPresentationMode().catch((error) => {
+      updatePresentationControls(`Presentation mode update failed: ${error.message}`);
+    });
+  }, 150);
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (
+    document.visibilityState === "visible" &&
+    presentationModeRequested &&
+    isFullscreenActive() &&
+    (!wakeLock || wakeLock.released)
+  ) {
+    void requestWakeLock().then((result) => {
+      updatePresentationControls(result.message);
+    });
+  }
+});
+
+settingsForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  settingsError.textContent = "";
+
+  if (!settingsForm.reportValidity()) {
+    return;
+  }
+
+  if (minutesSinceMidnight(endInput.value) <= minutesSinceMidnight(startInput.value)) {
+    settingsError.textContent = "End time must be later than start time.";
+    endInput.focus();
+    return;
+  }
+
+  const requestedLogo = logoInput.value.trim();
+  if (requestedLogo && !isHttpUrl(requestedLogo)) {
+    settingsError.textContent = "Logo image must use an HTTP or HTTPS URL.";
+    logoInput.focus();
+    return;
+  }
+
+  const url = new URL(window.location.href);
+  url.searchParams.set("title", titleInput.value.trim());
+  url.searchParams.set("start", compactClockTime(startInput.value));
+  url.searchParams.set("end", compactClockTime(endInput.value));
+  url.searchParams.set("duration", durationInput.value);
+  if (requestedLogo) {
+    url.searchParams.set("logo", requestedLogo);
+  } else {
+    url.searchParams.delete("logo");
+  }
+  window.location.assign(url.toString());
+});
+
+titleImage.addEventListener("error", () => {
+  titleImage.hidden = true;
+  imageError.hidden = false;
+});
+
+sessionBell.addEventListener("error", () => {
+  soundEnabled = false;
+  updateSoundControls("The bell audio file could not be loaded.");
+});
+
+updateSoundControls();
+void syncPresentationMode().catch((error) => {
+  updatePresentationControls(`Presentation mode update failed: ${error.message}`);
+});
+render();
+setInterval(render, renderIntervalMilliseconds);

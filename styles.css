@@ -1,0 +1,331 @@
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  color: #fff;
+  background-color: #2f4183;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  overflow: hidden;
+  background-color: #2f4183;
+}
+
+.session-view {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  min-height: 100vh;
+  text-align: center;
+}
+
+.title-banner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  min-height: 25vh;
+  height: 25vh;
+  padding: 0.75rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.title-banner-text {
+  width: 80vw;
+  max-width: 80vw;
+  margin: 0;
+  color: #fff;
+  font-size: clamp(1rem, 5.2vw, 3rem);
+  font-weight: 700;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+.title-banner-image {
+  display: block;
+  max-width: 40vw;
+  max-height: 15vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.image-error {
+  margin: 0;
+  color: #fecaca;
+  font-size: 0.8rem;
+}
+
+.session-indicator {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  color: #fff;
+  font-size: calc(10px + 3vmin);
+}
+
+.session-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.session-label,
+.session-count,
+.session-detail {
+  margin: 0;
+  line-height: 1;
+}
+
+.session-label {
+  font-size: 0.65em;
+  font-weight: 400;
+}
+
+.session-indicator[data-phase="before"] .session-label,
+.session-indicator[data-phase="after"] .session-label {
+  font-size: 1em;
+  font-weight: 600;
+}
+
+.session-count {
+  font-size: calc(18.72px + 22.464vmin);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+}
+
+.session-detail {
+  min-height: 1em;
+  font-size: 0.5em;
+}
+
+.current-time {
+  display: block;
+  color: #fff;
+  font-size: 1.425rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+.button-container {
+  position: fixed;
+  left: 1rem;
+  bottom: 1rem;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sound-toggle,
+.settings-toggle,
+.fullscreen-toggle {
+  position: relative;
+  width: 2.85rem;
+  height: 2.85rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: transparent;
+  font-size: 1.425rem;
+  line-height: 1;
+  background-color: #1f2937;
+  border: 0;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+.sound-toggle::after {
+  position: absolute;
+  content: "\1F507";
+  color: #e5e7eb;
+  font-size: 1.425rem;
+}
+
+.sound-toggle[aria-pressed="true"]::after {
+  content: "\1F50A";
+}
+
+.settings-toggle::after {
+  position: absolute;
+  content: "\2699";
+  color: #e5e7eb;
+  font-size: 1.575rem;
+}
+
+.fullscreen-toggle::after {
+  position: absolute;
+  content: "\26F6";
+  color: #e5e7eb;
+  font-size: 1.575rem;
+}
+
+.fullscreen-toggle[aria-pressed="true"] {
+  background-color: #0f766e;
+}
+
+.sound-toggle:hover,
+.settings-toggle:hover,
+.fullscreen-toggle:hover {
+  filter: brightness(1.3);
+}
+
+.sound-toggle:focus-visible,
+.settings-toggle:focus-visible,
+.fullscreen-toggle:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+.sound-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.schedule {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  margin: 0;
+  color: rgb(255 255 255 / 65%);
+  font-size: 0.75rem;
+}
+
+.presentation-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 36rem) {
+  .schedule {
+    bottom: 5rem;
+  }
+}
+
+.settings-view {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  padding: 1.5rem 1rem 5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  background-color: #2f4183;
+}
+
+.settings-view[hidden] {
+  display: none;
+}
+
+.settings-panel {
+  width: min(90vw, 35rem);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.65rem;
+  text-align: left;
+  background: rgb(0 0 0 / 18%);
+  border-radius: 0.75rem;
+}
+
+.settings-panel h2 {
+  margin: 0 0 0.35rem;
+  text-align: center;
+}
+
+.settings-label {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.settings-input {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  color: #0f172a;
+  font: inherit;
+  font-size: 1rem;
+  background: #f8fafc;
+  border: 1px solid rgb(255 255 255 / 35%);
+  border-radius: 0.45rem;
+}
+
+.settings-error {
+  min-height: 1.25rem;
+  margin: 0;
+  color: #fecaca;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.settings-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.65rem;
+}
+
+.settings-save-button,
+.settings-test-button,
+.settings-cancel-button {
+  padding: 0.55rem 1rem;
+  color: #ecfeff;
+  font: inherit;
+  font-size: 0.95rem;
+  border: 0;
+  border-radius: 0.45rem;
+  cursor: pointer;
+}
+
+.settings-save-button {
+  background-color: #0f766e;
+}
+
+.settings-test-button {
+  background-color: #1d4ed8;
+}
+
+.settings-cancel-button {
+  background-color: #1f2937;
+}
+
+.settings-save-button:hover,
+.settings-test-button:hover,
+.settings-cancel-button:hover {
+  filter: brightness(1.15);
+}
