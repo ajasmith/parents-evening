@@ -437,13 +437,16 @@ settingsTestBell.addEventListener("click", () => {
   playBell();
 });
 
-knownLogoSelect.addEventListener("change", () => {
+function applyKnownLogoSelection() {
   if (knownLogoSelect.value) {
     logoInput.value = knownLogoSelect.value;
     invertLogoInput.checked =
       knownLogoSelect.selectedOptions[0].dataset.invertLogo === "true";
   }
-});
+}
+
+knownLogoSelect.addEventListener("input", applyKnownLogoSelection);
+knownLogoSelect.addEventListener("change", applyKnownLogoSelection);
 
 logoInput.addEventListener("input", () => {
   knownLogoSelect.value = logoInput.value.trim();
