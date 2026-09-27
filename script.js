@@ -221,6 +221,22 @@ function compactClockTime(value) {
   return value.replace(":", "");
 }
 
+function formatHoursAndMinutes(totalMinutes) {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  const parts = [];
+
+  if (hours > 0) {
+    parts.push(`${hours} ${hours === 1 ? "hour" : "hours"}`);
+  }
+
+  if (minutes > 0) {
+    parts.push(`${minutes} ${minutes === 1 ? "minute" : "minutes"}`);
+  }
+
+  return parts.join(" ");
+}
+
 function isBrowserFullscreen() {
   const fullscreenTolerancePixels = 5;
   return (
@@ -351,10 +367,9 @@ function render() {
     sessionDetail.textContent = configurationErrors.join(" ");
     scheduleSummary.textContent = "Invalid schedule";
   } else if (state.phase === "before") {
-    const minuteUnit = state.minutesUntilStart === 1 ? "minute" : "minutes";
     sessionIndicator.dataset.phase = state.phase;
     sessionLabel.textContent =
-      `First session will start in ${state.minutesUntilStart} ${minuteUnit}`;
+      `First session will start in ${formatHoursAndMinutes(state.minutesUntilStart)}`;
     sessionCount.textContent = "";
     sessionDetail.textContent = "";
   } else if (state.phase === "after") {
