@@ -14,8 +14,9 @@ Use the settings button on the page, or provide these optional query parameters:
 
 | Parameter | Description | Default |
 | --- | --- | --- |
-| `title` | Page heading | `Parent's Evening` |
+| `title` | Page heading | `Parents Evening` |
 | `logo` | HTTP or HTTPS URL for an image above the title | None |
+| `invertLogo` | Set to `true` to render the logo in white | `false` |
 | `start` | First session start in four-digit 24-hour time | `1600` |
 | `end` | Final session end in four-digit 24-hour time | `1930` |
 | `duration` | Session duration in whole minutes | `5` |

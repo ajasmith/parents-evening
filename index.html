@@ -12,7 +12,7 @@
     <main class="session-view" aria-labelledby="page-title">
       <header class="title-banner">
         <img id="title-image" class="title-banner-image" alt="" hidden>
-        <h1 id="page-title" class="title-banner-text">Parent's Evening</h1>
+        <h1 id="page-title" class="title-banner-text">Parents Evening</h1>
         <p id="image-error" class="image-error" role="alert" hidden>
           The title image could not be loaded.
         </p>
@@ -41,7 +41,28 @@
           >
 
           <label class="settings-label" for="logo-input">Logo image URL (optional)</label>
-          <input id="logo-input" class="settings-input" name="logo" type="url">
+          <div class="logo-input-row">
+            <input id="logo-input" class="settings-input" name="logo" type="url">
+            <select id="known-logo-select" class="known-logo-select" aria-label="Choose a known logo">
+              <option value="">Known logos…</option>
+              <option
+                value="https://chandlings.org.uk/wp-content/uploads/2024/11/Chandlings-Logo-White.png"
+                data-invert-logo="false"
+              >
+                Chandlings
+              </option>
+              <option
+                value="https://www.cherwell.oxon.sch.uk/images/swan_symbol.png"
+                data-invert-logo="true"
+              >
+                Cherwell
+              </option>
+            </select>
+          </div>
+          <label class="settings-checkbox-row" for="invert-logo-input">
+            <input id="invert-logo-input" name="invertLogo" type="checkbox">
+            Invert logo colours
+          </label>
 
           <label class="settings-label" for="start-input">Start time</label>
           <input id="start-input" class="settings-input" name="start" type="time" required>

@@ -3,9 +3,10 @@ const defaultSchedule = {
   scheduleStartTime: "16:00",
   scheduleEndTime: "19:30",
 };
-const defaultTitle = "Parent's Evening";
+const defaultTitle = "Parents Evening";
 const renderIntervalMilliseconds = 2_000;
-const { schedule, title, logoUrl, configurationErrors } = getConfigFromQueryString();
+const { schedule, title, logoUrl, invertLogo, configurationErrors } =
+  getConfigFromQueryString();
 
 const currentTime = document.querySelector("#current-time");
 const pageTitle = document.querySelector("#page-title");
@@ -29,6 +30,8 @@ const settingsTestBell = document.querySelector("#settings-test-bell");
 const settingsError = document.querySelector("#settings-error");
 const titleInput = document.querySelector("#title-input");
 const logoInput = document.querySelector("#logo-input");
+const knownLogoSelect = document.querySelector("#known-logo-select");
+const invertLogoInput = document.querySelector("#invert-logo-input");
 const startInput = document.querySelector("#start-input");
 const endInput = document.querySelector("#end-input");
 const durationInput = document.querySelector("#duration-input");
@@ -48,11 +51,14 @@ if (logoUrl) {
   titleImage.src = logoUrl;
   titleImage.hidden = false;
 }
+titleImage.classList.toggle("title-banner-image--inverted", invertLogo);
 scheduleSummary.textContent =
   `${schedule.sessionDurationMinutes}-minute sessions · ` +
   `${schedule.scheduleStartTime}–${schedule.scheduleEndTime}`;
 titleInput.value = title;
 logoInput.value = logoUrl;
+knownLogoSelect.value = logoUrl;
+invertLogoInput.checked = invertLogo;
 startInput.value = schedule.scheduleStartTime;
 endInput.value = schedule.scheduleEndTime;
 durationInput.value = String(schedule.sessionDurationMinutes);
@@ -67,9 +73,11 @@ function getConfigFromQueryString() {
   const schedule = { ...defaultSchedule };
   let title = defaultTitle;
   let logoUrl = "";
+  let invertLogo = false;
   const configurationErrors = [];
   const requestedTitle = query.get("title");
   const requestedLogo = query.get("logo");
+  const requestedInvertLogo = query.get("invertLogo");
   const start = query.get("start");
   const end = query.get("end");
   const duration = query.get("duration");
@@ -88,6 +96,14 @@ function getConfigFromQueryString() {
       logoUrl = requestedLogo;
     } else {
       configurationErrors.push('“logo” must be an HTTP or HTTPS URL.');
+    }
+  }
+
+  if (requestedInvertLogo !== null) {
+    if (requestedInvertLogo === "true" || requestedInvertLogo === "false") {
+      invertLogo = requestedInvertLogo === "true";
+    } else {
+      configurationErrors.push('“invertLogo” must be either “true” or “false”.');
     }
   }
 
@@ -124,7 +140,7 @@ function getConfigFromQueryString() {
     configurationErrors.push('“end” must be later than “start”.');
   }
 
-  return { schedule, title, logoUrl, configurationErrors };
+  return { schedule, title, logoUrl, invertLogo, configurationErrors };
 }
 
 function isHttpUrl(value) {
@@ -421,6 +437,18 @@ settingsTestBell.addEventListener("click", () => {
   playBell();
 });
 
+knownLogoSelect.addEventListener("change", () => {
+  if (knownLogoSelect.value) {
+    logoInput.value = knownLogoSelect.value;
+    invertLogoInput.checked =
+      knownLogoSelect.selectedOptions[0].dataset.invertLogo === "true";
+  }
+});
+
+logoInput.addEventListener("input", () => {
+  knownLogoSelect.value = logoInput.value.trim();
+});
+
 fullscreenToggle.addEventListener("click", () => {
   if (document.fullscreenElement) {
     void exitPresentationMode();
@@ -489,6 +517,11 @@ settingsForm.addEventListener("submit", (event) => {
     url.searchParams.set("logo", requestedLogo);
   } else {
     url.searchParams.delete("logo");
+  }
+  if (invertLogoInput.checked) {
+    url.searchParams.set("invertLogo", "true");
+  } else {
+    url.searchParams.delete("invertLogo");
   }
   window.location.assign(url.toString());
 });
