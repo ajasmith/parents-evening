@@ -8,14 +8,19 @@ fullscreen and screen wake-lock support.
 
 [Open the Parent's Evening Session Clock](https://ajasmith.github.io/parents-evening/)
 
+## Saving settings
+
+Booking marking the current page will save the settings you currently have (since all settings are via query search parameters).
+
+
 ## Configuration
 
-Use the settings button on the page, or provide these optional query parameters:
+Use the bottom left settings button (&#x2699;) on the page, or provide these optional query parameters:
 
 | Parameter | Description | Default |
 | --- | --- | --- |
 | `title` | Page heading | `Parents Evening` |
-| `logo` | HTTP or HTTPS URL for an image above the title | None |
+| `logo` | HTTP or HTTPS URL for an image above the title. Known logos are included as a dropdown. | None |
 | `invertLogo` | Set to `true` to render the logo in white | `false` |
 | `start` | First session start in four-digit 24-hour time | `1600` |
 | `end` | Final session end in four-digit 24-hour time | `1930` |
