@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#2f4183">
     <title>Session Clock</title>
-    <link rel="stylesheet" href="styles.css?v=20260928-4">
-    <script src="script.js?v=20260928-4" defer></script>
+    <link rel="stylesheet" href="styles.css?v=20260928-6">
+    <script src="script.js?v=20260928-6" defer></script>
   </head>
   <body>
     <main class="session-view" aria-labelledby="page-title">
@@ -47,11 +47,20 @@
             Invert logo colours
           </label>
 
-          <label class="settings-label" for="start-input">Start time</label>
-          <input id="start-input" class="settings-input" name="start" type="time" required>
-
-          <label class="settings-label" for="end-input">End time</label>
-          <input id="end-input" class="settings-input" name="end" type="time" required>
+          <div class="settings-time-row">
+            <label class="settings-time-field" for="start-input">
+              <span class="settings-label">Start time</span>
+              <input id="start-input" class="settings-input" name="start" type="time" required>
+            </label>
+            <label class="settings-time-field" for="end-input">
+              <span class="settings-label">End time</span>
+              <input id="end-input" class="settings-input" name="end" type="time" required>
+            </label>
+            <label class="settings-clock-field" for="clock-format-input">
+              <input id="clock-format-input" name="clock" type="checkbox" checked>
+              24-hour
+            </label>
+          </div>
 
           <label class="settings-label" for="duration-input">Session duration (minutes)</label>
           <input
@@ -65,30 +74,24 @@
             required
           >
 
-          <label class="settings-label" for="clock-format-input">Clock format</label>
-          <select id="clock-format-input" class="settings-input" name="clock">
-            <option value="24">24-hour</option>
-            <option value="12">12-hour</option>
-          </select>
-
           <div class="settings-colour-row">
             <label class="settings-colour-field" for="background-colour-input">
-              <span class="settings-label">Background colour</span>
               <input
                 id="background-colour-input"
                 class="settings-colour-input"
                 name="background"
                 type="color"
               >
+              <span class="settings-label">Background colour</span>
             </label>
             <label class="settings-colour-field" for="foreground-colour-input">
-              <span class="settings-label">Text colour</span>
               <input
                 id="foreground-colour-input"
                 class="settings-colour-input"
                 name="foreground"
                 type="color"
               >
+              <span class="settings-label">Text colour</span>
             </label>
           </div>
 
@@ -135,7 +138,13 @@
 
       <div class="button-container">
         <time id="current-time" class="current-time" aria-label="Current time">--:--</time>
-        <button id="sound-toggle" class="sound-toggle" type="button" aria-pressed="false">
+        <button
+          id="sound-toggle"
+          class="sound-toggle"
+          type="button"
+          aria-pressed="false"
+          title="Mute session bell"
+        >
           Enable session bell
         </button>
         <button
@@ -144,6 +153,7 @@
           type="button"
           aria-controls="settings-view"
           aria-expanded="false"
+          title="Open settings"
         >
           Open settings
         </button>

@@ -294,6 +294,35 @@ body {
   border-radius: 0.45rem;
 }
 
+.settings-time-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 0.65rem;
+}
+
+.settings-time-field {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.settings-clock-field {
+  min-height: 2.65rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.settings-clock-field input {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+}
+
 .settings-colour-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -303,8 +332,8 @@ body {
 .settings-colour-field {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  justify-content: flex-start;
+  gap: 0.4rem;
 }
 
 .settings-colour-input {
@@ -315,6 +344,21 @@ body {
   border: 1px solid rgb(255 255 255 / 35%);
   border-radius: 0.45rem;
   cursor: pointer;
+}
+
+@media (max-width: 30rem) {
+  .settings-time-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .settings-clock-field {
+    min-height: auto;
+    grid-column: 1 / -1;
+  }
+
+  .settings-colour-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .school-configuration {

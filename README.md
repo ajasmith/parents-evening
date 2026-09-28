@@ -47,5 +47,7 @@ clock and a dark background:
 
 <https://ajasmith.github.io/parents-evening/?title=Year+8+Parents%27+Evening&start=1800&end=2000&duration=5&clock=12&background=1A1A26&foreground=FFFFFF>
 
-The bell is enabled by default. Browser autoplay policies may require an
-interaction with the page before audio can play.
+The bell is enabled by default. Muting or enabling it is saved in browser
+storage, so the choice persists when settings reload the page. It is not added
+to the URL. Browser autoplay policies may require an interaction with the page
+before audio can play.

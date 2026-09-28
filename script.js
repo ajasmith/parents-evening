@@ -6,6 +6,7 @@ const defaultSchedule = {
 const defaultTitle = "Parents Evening";
 const defaultBackgroundColour = "#2F4183";
 const defaultForegroundColour = "#FFFFFF";
+const soundEnabledStorageKey = "sessionClock.soundEnabled";
 const renderIntervalMilliseconds = 2_000;
 const {
   schedule,
@@ -78,10 +79,10 @@ invertLogoInput.checked = invertLogo;
 startInput.value = schedule.scheduleStartTime;
 endInput.value = schedule.scheduleEndTime;
 durationInput.value = String(schedule.sessionDurationMinutes);
-clockFormatInput.value = clockFormat;
+clockFormatInput.checked = clockFormat === "24";
 backgroundColourInput.value = backgroundColour;
 foregroundColourInput.value = foregroundColour;
-let soundEnabled = true;
+let soundEnabled = loadSoundEnabled();
 let lastObservedSessionIndex;
 let wakeLock = null;
 let presentationModeRequested = false;
@@ -274,9 +275,30 @@ function playBell() {
   });
 }
 
+function loadSoundEnabled() {
+  try {
+    const storedValue = window.localStorage.getItem(soundEnabledStorageKey);
+    return storedValue === null ? true : storedValue === "true";
+  } catch (error) {
+    console.error("Could not load the session bell preference.", error);
+    return true;
+  }
+}
+
+function saveSoundEnabled() {
+  try {
+    window.localStorage.setItem(soundEnabledStorageKey, String(soundEnabled));
+  } catch (error) {
+    console.error("Could not save the session bell preference.", error);
+    soundStatus.textContent =
+      "The session bell preference could not be saved by this browser.";
+  }
+}
+
 function updateSoundControls(message) {
   soundToggle.setAttribute("aria-pressed", String(soundEnabled));
   soundToggle.textContent = soundEnabled ? "Session bell enabled" : "Enable session bell";
+  soundToggle.title = soundEnabled ? "Mute session bell" : "Enable session bell";
   soundStatus.textContent =
     message ??
     (soundEnabled
@@ -288,6 +310,7 @@ function setSettingsOpen(isOpen) {
   settingsView.hidden = !isOpen;
   settingsToggle.setAttribute("aria-expanded", String(isOpen));
   settingsToggle.textContent = isOpen ? "Close settings" : "Open settings";
+  settingsToggle.title = settingsToggle.textContent;
   settingsError.textContent = "";
 
   if (isOpen) {
@@ -490,6 +513,7 @@ soundToggle.addEventListener("click", () => {
     sessionBell.currentTime = 0;
   }
   updateSoundControls();
+  saveSoundEnabled();
 });
 
 settingsToggle.addEventListener("click", () => {
@@ -589,10 +613,10 @@ settingsForm.addEventListener("submit", (event) => {
   url.searchParams.set("duration", durationInput.value);
   url.searchParams.set("background", backgroundColourInput.value.slice(1).toUpperCase());
   url.searchParams.set("foreground", foregroundColourInput.value.slice(1).toUpperCase());
-  if (clockFormatInput.value === "12") {
-    url.searchParams.set("clock", "12");
-  } else {
+  if (clockFormatInput.checked) {
     url.searchParams.delete("clock");
+  } else {
+    url.searchParams.set("clock", "12");
   }
   if (requestedLogo) {
     url.searchParams.set("logo", requestedLogo);
