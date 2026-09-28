@@ -52,7 +52,7 @@ const backgroundColourInput = document.querySelector("#background-colour-input")
 const foregroundColourInput = document.querySelector("#foreground-colour-input");
 
 const timeFormatter = new Intl.DateTimeFormat("en-GB", {
-  hour: "2-digit",
+  hour: clockFormat === "12" ? "numeric" : "2-digit",
   minute: "2-digit",
   hour12: clockFormat === "12",
 });
