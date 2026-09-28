@@ -42,6 +42,7 @@ const settingsError = document.querySelector("#settings-error");
 const titleInput = document.querySelector("#title-input");
 const logoInput = document.querySelector("#logo-input");
 const configurationSelect = document.querySelector("#configuration-select");
+const savedConfigurationsStatus = document.querySelector("#saved-configurations-status");
 const invertLogoInput = document.querySelector("#invert-logo-input");
 const startInput = document.querySelector("#start-input");
 const endInput = document.querySelector("#end-input");
@@ -74,7 +75,6 @@ scheduleSummary.textContent =
   `${formatScheduleTime(schedule.scheduleEndTime)}`;
 titleInput.value = title;
 logoInput.value = logoUrl;
-configurationSelect.value = logoUrl;
 invertLogoInput.checked = invertLogo;
 startInput.value = schedule.scheduleStartTime;
 endInput.value = schedule.scheduleEndTime;
@@ -219,6 +219,85 @@ function isRgbHexValue(value) {
   return /^[0-9a-f]{6}$/i.test(value);
 }
 
+function isCssRgbHexValue(value) {
+  return /^#[0-9a-f]{6}$/i.test(value);
+}
+
+function isSavedConfiguration(value) {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    typeof value.id === "string" &&
+    value.id.length > 0 &&
+    typeof value.name === "string" &&
+    value.name.length > 0 &&
+    typeof value.title === "string" &&
+    value.title.length >= 1 &&
+    value.title.length <= 100 &&
+    typeof value.logoUrl === "string" &&
+    isHttpUrl(value.logoUrl) &&
+    typeof value.invertLogo === "boolean" &&
+    typeof value.background === "string" &&
+    isCssRgbHexValue(value.background) &&
+    typeof value.foreground === "string" &&
+    isCssRgbHexValue(value.foreground)
+  );
+}
+
+async function loadSavedConfigurations() {
+  try {
+    const response = await fetch("profiles.json", { cache: "no-cache" });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const configurations = await response.json();
+    if (!Array.isArray(configurations) || !configurations.every(isSavedConfiguration)) {
+      throw new Error("The profiles file contains an invalid configuration.");
+    }
+
+    const ids = new Set(configurations.map((configuration) => configuration.id));
+    if (ids.size !== configurations.length) {
+      throw new Error("The profiles file contains duplicate IDs.");
+    }
+
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "Choose a school";
+    configurationSelect.replaceChildren(placeholder);
+
+    configurations.forEach((configuration) => {
+      const option = document.createElement("option");
+      option.value = configuration.id;
+      option.textContent = configuration.name;
+      option.dataset.title = configuration.title;
+      option.dataset.logoUrl = configuration.logoUrl;
+      option.dataset.invertLogo = String(configuration.invertLogo);
+      option.dataset.background = configuration.background;
+      option.dataset.foreground = configuration.foreground;
+      configurationSelect.append(option);
+    });
+
+    const matchingConfiguration = [...configurationSelect.options].find(
+      (option) => option.dataset.logoUrl === logoUrl,
+    );
+    configurationSelect.value = matchingConfiguration?.value ?? "";
+    configurationSelect.disabled = false;
+    savedConfigurationsStatus.hidden = true;
+    savedConfigurationsStatus.textContent = "";
+  } catch (error) {
+    console.error("Could not load saved configurations.", error);
+    configurationSelect.replaceChildren();
+    const unavailableOption = document.createElement("option");
+    unavailableOption.textContent = "Saved configurations unavailable";
+    configurationSelect.append(unavailableOption);
+    configurationSelect.disabled = true;
+    savedConfigurationsStatus.textContent =
+      "Saved configurations could not be loaded. You can still enter settings manually.";
+    savedConfigurationsStatus.hidden = false;
+  }
+}
+
 function expandClockTime(value) {
   return `${value.slice(0, 2)}:${value.slice(2)}`;
 }
@@ -320,6 +399,14 @@ function setSettingsOpen(isOpen) {
 
 function compactClockTime(value) {
   return value.replace(":", "");
+}
+
+function setNonDefaultQueryParameter(searchParams, name, value, defaultValue) {
+  if (value === defaultValue) {
+    searchParams.delete(name);
+  } else {
+    searchParams.set(name, value);
+  }
 }
 
 function formatScheduleTime(value) {
@@ -532,7 +619,7 @@ function applyConfigurationSelection() {
   if (configurationSelect.value) {
     const selectedConfiguration = configurationSelect.selectedOptions[0];
     titleInput.value = selectedConfiguration.dataset.title;
-    logoInput.value = configurationSelect.value;
+    logoInput.value = selectedConfiguration.dataset.logoUrl;
     invertLogoInput.checked =
       selectedConfiguration.dataset.invertLogo === "true";
     backgroundColourInput.value = selectedConfiguration.dataset.background;
@@ -544,7 +631,10 @@ configurationSelect.addEventListener("input", applyConfigurationSelection);
 configurationSelect.addEventListener("change", applyConfigurationSelection);
 
 logoInput.addEventListener("input", () => {
-  configurationSelect.value = logoInput.value.trim();
+  const matchingConfiguration = [...configurationSelect.options].find(
+    (option) => option.dataset.logoUrl === logoInput.value.trim(),
+  );
+  configurationSelect.value = matchingConfiguration?.value ?? "";
 });
 
 fullscreenToggle.addEventListener("click", () => {
@@ -607,27 +697,55 @@ settingsForm.addEventListener("submit", (event) => {
   }
 
   const url = new URL(window.location.href);
-  url.searchParams.set("title", titleInput.value.trim());
-  url.searchParams.set("start", compactClockTime(startInput.value));
-  url.searchParams.set("end", compactClockTime(endInput.value));
-  url.searchParams.set("duration", durationInput.value);
-  url.searchParams.set("background", backgroundColourInput.value.slice(1).toUpperCase());
-  url.searchParams.set("foreground", foregroundColourInput.value.slice(1).toUpperCase());
-  if (clockFormatInput.checked) {
-    url.searchParams.delete("clock");
-  } else {
-    url.searchParams.set("clock", "12");
-  }
-  if (requestedLogo) {
-    url.searchParams.set("logo", requestedLogo);
-  } else {
-    url.searchParams.delete("logo");
-  }
-  if (invertLogoInput.checked) {
-    url.searchParams.set("invertLogo", "true");
-  } else {
-    url.searchParams.delete("invertLogo");
-  }
+  setNonDefaultQueryParameter(
+    url.searchParams,
+    "title",
+    titleInput.value.trim(),
+    defaultTitle,
+  );
+  setNonDefaultQueryParameter(
+    url.searchParams,
+    "start",
+    compactClockTime(startInput.value),
+    compactClockTime(defaultSchedule.scheduleStartTime),
+  );
+  setNonDefaultQueryParameter(
+    url.searchParams,
+    "end",
+    compactClockTime(endInput.value),
+    compactClockTime(defaultSchedule.scheduleEndTime),
+  );
+  setNonDefaultQueryParameter(
+    url.searchParams,
+    "duration",
+    durationInput.value,
+    String(defaultSchedule.sessionDurationMinutes),
+  );
+  setNonDefaultQueryParameter(
+    url.searchParams,
+    "background",
+    backgroundColourInput.value.slice(1).toUpperCase(),
+    defaultBackgroundColour.slice(1),
+  );
+  setNonDefaultQueryParameter(
+    url.searchParams,
+    "foreground",
+    foregroundColourInput.value.slice(1).toUpperCase(),
+    defaultForegroundColour.slice(1),
+  );
+  setNonDefaultQueryParameter(
+    url.searchParams,
+    "clock",
+    clockFormatInput.checked ? "24" : "12",
+    "24",
+  );
+  setNonDefaultQueryParameter(url.searchParams, "logo", requestedLogo, "");
+  setNonDefaultQueryParameter(
+    url.searchParams,
+    "invertLogo",
+    String(invertLogoInput.checked),
+    "false",
+  );
   window.location.assign(url.toString());
 });
 
@@ -642,6 +760,7 @@ sessionBell.addEventListener("error", () => {
 });
 
 updateSoundControls();
+void loadSavedConfigurations();
 void syncPresentationMode().catch((error) => {
   updatePresentationControls(`Presentation mode update failed: ${error.message}`);
 });

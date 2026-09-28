@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#2f4183">
     <title>Session Clock</title>
     <link rel="stylesheet" href="styles.css?v=20260928-6">
-    <script src="script.js?v=20260928-6" defer></script>
+    <script src="script.js?v=20260928-8" defer></script>
   </head>
   <body>
     <main class="session-view" aria-labelledby="page-title">
@@ -99,27 +99,15 @@
             <h3 id="school-configuration-heading">Saved configurations</h3>
             <p>Selecting a school fills in the title, logo, and colour settings above for you.</p>
             <label class="settings-label" for="configuration-select">School</label>
-            <select id="configuration-select" class="configuration-select">
-              <option value="">Choose a school</option>
-              <option
-                value="https://chandlings.org.uk/wp-content/uploads/2024/11/Chandlings-Logo-White.png"
-                data-title="Parents' Evening"
-                data-invert-logo="false"
-                data-background="#2F4183"
-                data-foreground="#FFFFFF"
-              >
-                Chandlings
-              </option>
-              <option
-                value="https://www.cherwell.oxon.sch.uk/images/swan_symbol.png"
-                data-title="Cherwell PCE"
-                data-invert-logo="true"
-                data-background="#1A1A26"
-                data-foreground="#FFFFFF"
-              >
-                Cherwell
-              </option>
+            <select id="configuration-select" class="configuration-select" disabled>
+              <option value="">Loading saved configurations…</option>
             </select>
+            <p
+              id="saved-configurations-status"
+              class="saved-configurations-status"
+              role="status"
+              hidden
+            ></p>
           </section>
 
           <p id="settings-error" class="settings-error" role="alert"></p>

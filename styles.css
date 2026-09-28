@@ -405,6 +405,13 @@ body {
   background: #f1f5f9;
 }
 
+.saved-configurations-status {
+  margin: 0;
+  color: #fecaca;
+  font-size: 0.85rem;
+  opacity: 1;
+}
+
 .settings-checkbox-row {
   display: flex;
   align-items: center;

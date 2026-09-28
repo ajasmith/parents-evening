@@ -1,0 +1,20 @@
+[
+  {
+    "id": "chandlings",
+    "name": "Chandlings",
+    "title": "Parents' Evening",
+    "logoUrl": "https://chandlings.org.uk/wp-content/uploads/2024/11/Chandlings-Logo-White.png",
+    "invertLogo": false,
+    "background": "#2F4183",
+    "foreground": "#FFFFFF"
+  },
+  {
+    "id": "cherwell",
+    "name": "Cherwell",
+    "title": "Cherwell PCE",
+    "logoUrl": "https://www.cherwell.oxon.sch.uk/images/swan_symbol.png",
+    "invertLogo": true,
+    "background": "#1A1A26",
+    "foreground": "#FFFFFF"
+  }
+]

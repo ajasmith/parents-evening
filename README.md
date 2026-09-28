@@ -16,19 +16,24 @@ reloads the page with the settings in the URL. Bookmark the resulting page or
 copy its URL to retain and share that configuration.
 
 The **Saved configurations** section can fill in the branding settings for a
-school:
+school. Profiles are loaded from [`profiles.json`](profiles.json):
 
 | School | Title | Background | Text |
 | --- | --- | --- | --- |
 | Chandlings | `Parents' Evening` | `2F4183` | `FFFFFF` |
 | Cherwell | `Cherwell PCE` | `1A1A26` | `FFFFFF` |
 
-You can adjust any of the populated settings before selecting **Save**.
+Add another object to that file to make a new school available. Each profile
+requires a unique `id`, display `name`, `title`, HTTP or HTTPS `logoUrl`,
+boolean `invertLogo`, and six-digit `background` and `foreground` colours
+including the leading `#`. You can adjust any populated settings before
+selecting **Save**.
 
 ### URL parameters
 
 Settings can also be provided directly with these optional query-string
-parameters:
+parameters. Saving removes parameters whose values match the defaults, keeping
+the resulting URL as short as possible.
 
 | Parameter | Description | Default |
 | --- | --- | --- |
