@@ -4,9 +4,19 @@ const defaultSchedule = {
   scheduleEndTime: "19:30",
 };
 const defaultTitle = "Parents Evening";
+const defaultBackgroundColour = "#2F4183";
+const defaultForegroundColour = "#FFFFFF";
 const renderIntervalMilliseconds = 2_000;
-const { schedule, title, logoUrl, invertLogo, configurationErrors } =
-  getConfigFromQueryString();
+const {
+  schedule,
+  title,
+  logoUrl,
+  invertLogo,
+  clockFormat,
+  backgroundColour,
+  foregroundColour,
+  configurationErrors,
+} = getConfigFromQueryString();
 
 const currentTime = document.querySelector("#current-time");
 const pageTitle = document.querySelector("#page-title");
@@ -30,21 +40,26 @@ const settingsTestBell = document.querySelector("#settings-test-bell");
 const settingsError = document.querySelector("#settings-error");
 const titleInput = document.querySelector("#title-input");
 const logoInput = document.querySelector("#logo-input");
-const knownLogoSelect = document.querySelector("#known-logo-select");
+const configurationSelect = document.querySelector("#configuration-select");
 const invertLogoInput = document.querySelector("#invert-logo-input");
 const startInput = document.querySelector("#start-input");
 const endInput = document.querySelector("#end-input");
 const durationInput = document.querySelector("#duration-input");
+const clockFormatInput = document.querySelector("#clock-format-input");
+const backgroundColourInput = document.querySelector("#background-colour-input");
+const foregroundColourInput = document.querySelector("#foreground-colour-input");
 
 const timeFormatter = new Intl.DateTimeFormat("en-GB", {
   hour: "2-digit",
   minute: "2-digit",
-  hour12: false,
+  hour12: clockFormat === "12",
 });
 
 const [startHour, startMinute] = parseTime(schedule.scheduleStartTime);
 const [endHour, endMinute] = parseTime(schedule.scheduleEndTime);
 const sessionDurationMs = schedule.sessionDurationMinutes * 60 * 1000;
+document.documentElement.style.setProperty("--background-colour", backgroundColour);
+document.documentElement.style.setProperty("--foreground-colour", foregroundColour);
 pageTitle.textContent = title;
 document.title = `${title} – Session Clock`;
 if (logoUrl) {
@@ -54,14 +69,18 @@ if (logoUrl) {
 titleImage.classList.toggle("title-banner-image--inverted", invertLogo);
 scheduleSummary.textContent =
   `${schedule.sessionDurationMinutes}-minute sessions · ` +
-  `${schedule.scheduleStartTime}–${schedule.scheduleEndTime}`;
+  `${formatScheduleTime(schedule.scheduleStartTime)}–` +
+  `${formatScheduleTime(schedule.scheduleEndTime)}`;
 titleInput.value = title;
 logoInput.value = logoUrl;
-knownLogoSelect.value = logoUrl;
+configurationSelect.value = logoUrl;
 invertLogoInput.checked = invertLogo;
 startInput.value = schedule.scheduleStartTime;
 endInput.value = schedule.scheduleEndTime;
 durationInput.value = String(schedule.sessionDurationMinutes);
+clockFormatInput.value = clockFormat;
+backgroundColourInput.value = backgroundColour;
+foregroundColourInput.value = foregroundColour;
 let soundEnabled = true;
 let lastObservedSessionIndex;
 let wakeLock = null;
@@ -74,6 +93,9 @@ function getConfigFromQueryString() {
   let title = defaultTitle;
   let logoUrl = "";
   let invertLogo = false;
+  let clockFormat = "24";
+  let backgroundColour = defaultBackgroundColour;
+  let foregroundColour = defaultForegroundColour;
   const configurationErrors = [];
   const requestedTitle = query.get("title");
   const requestedLogo = query.get("logo");
@@ -81,6 +103,9 @@ function getConfigFromQueryString() {
   const start = query.get("start");
   const end = query.get("end");
   const duration = query.get("duration");
+  const requestedClockFormat = query.get("clock");
+  const requestedBackgroundColour = query.get("background");
+  const requestedForegroundColour = query.get("foreground");
 
   if (requestedTitle !== null) {
     const trimmedTitle = requestedTitle.trim();
@@ -132,6 +157,30 @@ function getConfigFromQueryString() {
     }
   }
 
+  if (requestedClockFormat !== null) {
+    if (requestedClockFormat === "12" || requestedClockFormat === "24") {
+      clockFormat = requestedClockFormat;
+    } else {
+      configurationErrors.push('“clock” must be either “12” or “24”.');
+    }
+  }
+
+  if (requestedBackgroundColour !== null) {
+    if (isRgbHexValue(requestedBackgroundColour)) {
+      backgroundColour = `#${requestedBackgroundColour.toUpperCase()}`;
+    } else {
+      configurationErrors.push('“background” must be a six-digit RGB colour.');
+    }
+  }
+
+  if (requestedForegroundColour !== null) {
+    if (isRgbHexValue(requestedForegroundColour)) {
+      foregroundColour = `#${requestedForegroundColour.toUpperCase()}`;
+    } else {
+      configurationErrors.push('“foreground” must be a six-digit RGB colour.');
+    }
+  }
+
   if (
     configurationErrors.length === 0 &&
     minutesSinceMidnight(schedule.scheduleEndTime) <=
@@ -140,7 +189,16 @@ function getConfigFromQueryString() {
     configurationErrors.push('“end” must be later than “start”.');
   }
 
-  return { schedule, title, logoUrl, invertLogo, configurationErrors };
+  return {
+    schedule,
+    title,
+    logoUrl,
+    invertLogo,
+    clockFormat,
+    backgroundColour,
+    foregroundColour,
+    configurationErrors,
+  };
 }
 
 function isHttpUrl(value) {
@@ -154,6 +212,10 @@ function isHttpUrl(value) {
 
 function isCompactClockTime(value) {
   return /^(?:[01]\d|2[0-3])[0-5]\d$/.test(value);
+}
+
+function isRgbHexValue(value) {
+  return /^[0-9a-f]{6}$/i.test(value);
 }
 
 function expandClockTime(value) {
@@ -235,6 +297,11 @@ function setSettingsOpen(isOpen) {
 
 function compactClockTime(value) {
   return value.replace(":", "");
+}
+
+function formatScheduleTime(value) {
+  const [hour, minute] = parseTime(value);
+  return timeFormatter.format(timeOnSameDay(new Date(), hour, minute));
 }
 
 function formatHoursAndMinutes(totalMinutes) {
@@ -437,19 +504,23 @@ settingsTestBell.addEventListener("click", () => {
   playBell();
 });
 
-function applyKnownLogoSelection() {
-  if (knownLogoSelect.value) {
-    logoInput.value = knownLogoSelect.value;
+function applyConfigurationSelection() {
+  if (configurationSelect.value) {
+    const selectedConfiguration = configurationSelect.selectedOptions[0];
+    titleInput.value = selectedConfiguration.dataset.title;
+    logoInput.value = configurationSelect.value;
     invertLogoInput.checked =
-      knownLogoSelect.selectedOptions[0].dataset.invertLogo === "true";
+      selectedConfiguration.dataset.invertLogo === "true";
+    backgroundColourInput.value = selectedConfiguration.dataset.background;
+    foregroundColourInput.value = selectedConfiguration.dataset.foreground;
   }
 }
 
-knownLogoSelect.addEventListener("input", applyKnownLogoSelection);
-knownLogoSelect.addEventListener("change", applyKnownLogoSelection);
+configurationSelect.addEventListener("input", applyConfigurationSelection);
+configurationSelect.addEventListener("change", applyConfigurationSelection);
 
 logoInput.addEventListener("input", () => {
-  knownLogoSelect.value = logoInput.value.trim();
+  configurationSelect.value = logoInput.value.trim();
 });
 
 fullscreenToggle.addEventListener("click", () => {
@@ -516,6 +587,13 @@ settingsForm.addEventListener("submit", (event) => {
   url.searchParams.set("start", compactClockTime(startInput.value));
   url.searchParams.set("end", compactClockTime(endInput.value));
   url.searchParams.set("duration", durationInput.value);
+  url.searchParams.set("background", backgroundColourInput.value.slice(1).toUpperCase());
+  url.searchParams.set("foreground", foregroundColourInput.value.slice(1).toUpperCase());
+  if (clockFormatInput.value === "12") {
+    url.searchParams.set("clock", "12");
+  } else {
+    url.searchParams.delete("clock");
+  }
   if (requestedLogo) {
     url.searchParams.set("logo", requestedLogo);
   } else {
