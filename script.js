@@ -3,7 +3,7 @@ const defaultSchedule = {
   scheduleStartTime: "16:00",
   scheduleEndTime: "19:30",
 };
-const defaultTitle = "Parents Evening";
+const defaultTitle = "Parents' Evening";
 const defaultBackgroundColour = "#2F4183";
 const defaultForegroundColour = "#FFFFFF";
 const soundEnabledStorageKey = "sessionClock.soundEnabled";
