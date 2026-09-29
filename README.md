@@ -8,6 +8,21 @@ fullscreen and screen wake-lock support.
 
 [Open the Parent's Evening Session Clock](https://ajasmith.github.io/parents-evening/)
 
+## Development and deployment
+
+Open `index.html` directly or serve the repository directory to work locally.
+The source HTML references `styles.css` and `script.js` without manually
+maintained version parameters.
+
+Run `npm run build` to create the production site in `dist`. The build gives
+the stylesheet and script content-hashed filenames and updates the generated
+HTML to reference them. GitHub Actions runs this build and deploys `dist` to
+GitHub Pages whenever `main` is updated.
+
+Before the first workflow deployment, change the repository's **Settings >
+Pages > Build and deployment > Source** from **Deploy from a branch** to
+**GitHub Actions**. This is a one-time repository setting.
+
 ## Settings
 
 Use the settings button (&#x2699;) in the bottom-left corner to configure the
