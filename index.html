@@ -5,10 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#2f4183">
     <title>Session Clock</title>
-    <link rel="stylesheet" href="styles.css?v=20260928-6">
-    <script src="script.js?v=20260928-9" defer></script>
+    <link rel="stylesheet" href="styles.css?v=20260929-1">
+    <script src="script.js?v=20260929-1" defer></script>
   </head>
   <body>
+    <svg width="0" height="0" aria-hidden="true">
+      <defs>
+        <filter id="logo-text-colour-filter" color-interpolation-filters="sRGB">
+          <feFlood id="logo-colour-flood" flood-color="#FFFFFF" result="colour"></feFlood>
+          <feComposite in="colour" in2="SourceAlpha" operator="in"></feComposite>
+        </filter>
+      </defs>
+    </svg>
     <main class="session-view" aria-labelledby="page-title">
       <header class="title-banner">
         <img id="title-image" class="title-banner-image" alt="" hidden>
@@ -42,9 +50,9 @@
 
           <label class="settings-label" for="logo-input">Logo image URL (optional)</label>
           <input id="logo-input" class="settings-input" name="logo" type="url">
-          <label class="settings-checkbox-row" for="invert-logo-input">
-            <input id="invert-logo-input" name="invertLogo" type="checkbox">
-            Invert logo colours
+          <label class="settings-checkbox-row" for="match-logo-colour-input">
+            <input id="match-logo-colour-input" name="matchLogoColour" type="checkbox">
+            Logo matches text colour
           </label>
 
           <div class="settings-time-row">

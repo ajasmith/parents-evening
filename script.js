@@ -12,7 +12,7 @@ const {
   schedule,
   title,
   logoUrl,
-  invertLogo,
+  matchLogoColour,
   clockFormat,
   backgroundColour,
   foregroundColour,
@@ -22,6 +22,7 @@ const {
 const currentTime = document.querySelector("#current-time");
 const pageTitle = document.querySelector("#page-title");
 const titleImage = document.querySelector("#title-image");
+const logoColourFlood = document.querySelector("#logo-colour-flood");
 const imageError = document.querySelector("#image-error");
 const sessionIndicator = document.querySelector(".session-indicator");
 const sessionLabel = document.querySelector("#session-label");
@@ -43,7 +44,7 @@ const titleInput = document.querySelector("#title-input");
 const logoInput = document.querySelector("#logo-input");
 const configurationSelect = document.querySelector("#configuration-select");
 const savedConfigurationsStatus = document.querySelector("#saved-configurations-status");
-const invertLogoInput = document.querySelector("#invert-logo-input");
+const matchLogoColourInput = document.querySelector("#match-logo-colour-input");
 const startInput = document.querySelector("#start-input");
 const endInput = document.querySelector("#end-input");
 const durationInput = document.querySelector("#duration-input");
@@ -62,20 +63,21 @@ const [endHour, endMinute] = parseTime(schedule.scheduleEndTime);
 const sessionDurationMs = schedule.sessionDurationMinutes * 60 * 1000;
 document.documentElement.style.setProperty("--background-colour", backgroundColour);
 document.documentElement.style.setProperty("--foreground-colour", foregroundColour);
+logoColourFlood.setAttribute("flood-color", foregroundColour);
 pageTitle.textContent = title;
 document.title = `${title} – Session Clock`;
 if (logoUrl) {
   titleImage.src = logoUrl;
   titleImage.hidden = false;
 }
-titleImage.classList.toggle("title-banner-image--inverted", invertLogo);
+titleImage.classList.toggle("title-banner-image--matches-text", matchLogoColour);
 scheduleSummary.textContent =
   `${schedule.sessionDurationMinutes}-minute sessions · ` +
   `${formatScheduleTime(schedule.scheduleStartTime)}–` +
   `${formatScheduleTime(schedule.scheduleEndTime)}`;
 titleInput.value = title;
 logoInput.value = logoUrl;
-invertLogoInput.checked = invertLogo;
+matchLogoColourInput.checked = matchLogoColour;
 startInput.value = schedule.scheduleStartTime;
 endInput.value = schedule.scheduleEndTime;
 durationInput.value = String(schedule.sessionDurationMinutes);
@@ -93,14 +95,15 @@ function getConfigFromQueryString() {
   const schedule = { ...defaultSchedule };
   let title = defaultTitle;
   let logoUrl = "";
-  let invertLogo = false;
+  let matchLogoColour = false;
   let clockFormat = "24";
   let backgroundColour = defaultBackgroundColour;
   let foregroundColour = defaultForegroundColour;
   const configurationErrors = [];
   const requestedTitle = query.get("title");
   const requestedLogo = query.get("logo");
-  const requestedInvertLogo = query.get("invertLogo");
+  const requestedMatchLogoColour =
+    query.get("matchLogoColour") ?? query.get("invertLogo");
   const start = query.get("start");
   const end = query.get("end");
   const duration = query.get("duration");
@@ -125,11 +128,13 @@ function getConfigFromQueryString() {
     }
   }
 
-  if (requestedInvertLogo !== null) {
-    if (requestedInvertLogo === "true" || requestedInvertLogo === "false") {
-      invertLogo = requestedInvertLogo === "true";
+  if (requestedMatchLogoColour !== null) {
+    if (requestedMatchLogoColour === "true" || requestedMatchLogoColour === "false") {
+      matchLogoColour = requestedMatchLogoColour === "true";
     } else {
-      configurationErrors.push('“invertLogo” must be either “true” or “false”.');
+      configurationErrors.push(
+        '“matchLogoColour” must be either “true” or “false”.',
+      );
     }
   }
 
@@ -194,7 +199,7 @@ function getConfigFromQueryString() {
     schedule,
     title,
     logoUrl,
-    invertLogo,
+    matchLogoColour,
     clockFormat,
     backgroundColour,
     foregroundColour,
@@ -236,7 +241,7 @@ function isSavedConfiguration(value) {
     value.title.length <= 100 &&
     typeof value.logoUrl === "string" &&
     isHttpUrl(value.logoUrl) &&
-    typeof value.invertLogo === "boolean" &&
+    typeof value.matchLogoColour === "boolean" &&
     typeof value.background === "string" &&
     isCssRgbHexValue(value.background) &&
     typeof value.foreground === "string" &&
@@ -272,7 +277,7 @@ async function loadSavedConfigurations() {
       option.textContent = configuration.name;
       option.dataset.title = configuration.title;
       option.dataset.logoUrl = configuration.logoUrl;
-      option.dataset.invertLogo = String(configuration.invertLogo);
+      option.dataset.matchLogoColour = String(configuration.matchLogoColour);
       option.dataset.background = configuration.background;
       option.dataset.foreground = configuration.foreground;
       configurationSelect.append(option);
@@ -620,8 +625,8 @@ function applyConfigurationSelection() {
     const selectedConfiguration = configurationSelect.selectedOptions[0];
     titleInput.value = selectedConfiguration.dataset.title;
     logoInput.value = selectedConfiguration.dataset.logoUrl;
-    invertLogoInput.checked =
-      selectedConfiguration.dataset.invertLogo === "true";
+    matchLogoColourInput.checked =
+      selectedConfiguration.dataset.matchLogoColour === "true";
     backgroundColourInput.value = selectedConfiguration.dataset.background;
     foregroundColourInput.value = selectedConfiguration.dataset.foreground;
   }
@@ -740,10 +745,11 @@ settingsForm.addEventListener("submit", (event) => {
     "24",
   );
   setNonDefaultQueryParameter(url.searchParams, "logo", requestedLogo, "");
+  url.searchParams.delete("invertLogo");
   setNonDefaultQueryParameter(
     url.searchParams,
-    "invertLogo",
-    String(invertLogoInput.checked),
+    "matchLogoColour",
+    String(matchLogoColourInput.checked),
     "false",
   );
   window.location.assign(url.toString());

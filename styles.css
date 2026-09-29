@@ -64,8 +64,8 @@ body {
   object-fit: contain;
 }
 
-.title-banner-image--inverted {
-  filter: brightness(0) invert(1);
+.title-banner-image--matches-text {
+  filter: url("#logo-text-colour-filter");
 }
 
 .image-error {

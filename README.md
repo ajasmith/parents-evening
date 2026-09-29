@@ -25,7 +25,7 @@ school. Profiles are loaded from [`profiles.json`](profiles.json):
 
 Add another object to that file to make a new school available. Each profile
 requires a unique `id`, display `name`, `title`, HTTP or HTTPS `logoUrl`,
-boolean `invertLogo`, and six-digit `background` and `foreground` colours
+boolean `matchLogoColour`, and six-digit `background` and `foreground` colours
 including the leading `#`. You can adjust any populated settings before
 selecting **Save**.
 
@@ -39,13 +39,17 @@ the resulting URL as short as possible.
 | --- | --- | --- |
 | `title` | Page heading | `Parents Evening` |
 | `logo` | HTTP or HTTPS URL for an image displayed above the title | None |
-| `invertLogo` | Set to `true` to render the logo in white | `false` |
+| `matchLogoColour` | Set to `true` to render the logo in the selected text colour | `false` |
 | `start` | First session start in four-digit 24-hour time | `1600` |
 | `end` | Final session end in four-digit 24-hour time | `1930` |
 | `duration` | Session duration in whole minutes | `5` |
 | `clock` | Clock display format (`24` or `12`) | `24` |
 | `background` | Background colour as a six-digit RGB hex value without `#` | `2F4183` |
 | `foreground` | Text colour as a six-digit RGB hex value without `#` | `FFFFFF` |
+
+Legacy URLs using `invertLogo` remain supported. Its value is interpreted as
+`matchLogoColour` and is converted to the new parameter when settings are
+saved.
 
 For example, this URL creates a five-minute Year 8 schedule using a 12-hour
 clock and a dark background:
