@@ -9,12 +9,66 @@
     "foreground": "#FFFFFF"
   },
   {
+    "id": "cheney-school",
+    "name": "Cheney",
+    "title": "Parents' Evening",
+    "logoUrl": "https://www.cheneyschool.org/images/logo.png",
+    "matchLogoColour": true,
+    "background": "#8E2E4F",
+    "foreground": "#FFFFFF"
+  },
+  {
     "id": "cherwell",
     "name": "Cherwell",
     "title": "Cherwell PCE",
     "logoUrl": "https://www.cherwell.oxon.sch.uk/images/swan_symbol.png",
     "matchLogoColour": true,
     "background": "#1A1A26",
+    "foreground": "#FFFFFF"
+  },
+  {
+    "id": "greyfriars",
+    "name": "Greyfriars",
+    "title": "Parents' Evening",
+    "logoUrl": "https://www.greyfriarsoxford.org.uk/_site/images/design/logo.svg",
+    "matchLogoColour": false,
+    "background": "#B92938",
+    "foreground": "#FFFFFF"
+  },
+  {
+    "id": "iffley-academy",
+    "name": "Iffley Academy",
+    "title": "Parents' Evening",
+    "logoUrl": "https://storage.googleapis.com/storage.digitalgravity.io/digitalgravity-wordpress-storage/2016/08/Iffley_Logo.png",
+    "matchLogoColour": false,
+    "background": "#75C2C4",
+    "foreground": "#FFFFFF"
+  },
+  {
+    "id": "matthew-arnold-school",
+    "name": "Matthew Arnold",
+    "title": "Matthew Arnold School PCE",
+    "logoUrl": "https://www.maschool.org.uk/images/trees.svg",
+    "matchLogoColour": true,
+    "background": "#67022B",
+    "foreground": "#F9B700"
+  },
+  {
+    "id": "oxford-spires-academy",
+    "name": "Oxford Spires Academy",
+    "title": "Parents' Evening",
+    "logoUrl": "https://www.oxfordspires.anthemtrust.uk/_site/data/files/images/logos/69C3F0C172ED9D283BAAAC79D8A5949F.png",
+    "matchLogoColour": false,
+    "background": "#450F62",
+    "foreground": "#FFFFFF"
+  },
+  {
+    "id": "the-swan-school",
+    "name": "The Swan School",
+    "title": "Parents' Evening",
+    "logoUrl": "https://www.theswanschool.org.uk/images/logo.png",
+    "matchLogoColour": true,
+    "background": "#19576F",
     "foreground": "#FFFFFF"
   }
 ]

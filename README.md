@@ -22,11 +22,6 @@ warning in settings but does not prevent saving or change the URL.
 The **Saved configurations** section can fill in the branding settings for a
 school. Profiles are loaded from [`profiles.json`](profiles.json):
 
-| School | Title | Background | Text |
-| --- | --- | --- | --- |
-| Chandlings | `Parents' Evening` | `2F4183` | `FFFFFF` |
-| Cherwell | `Cherwell PCE` | `1A1A26` | `FFFFFF` |
-
 Add another object to that file to make a new school available. Each profile
 requires a unique `id`, display `name`, `title`, HTTP or HTTPS `logoUrl`,
 boolean `matchLogoColour`, and six-digit `background` and `foreground` colours
