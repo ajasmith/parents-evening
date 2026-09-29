@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#2f4183">
     <title>Session Clock</title>
-    <link rel="stylesheet" href="styles.css?v=20260929-1">
-    <script src="script.js?v=20260929-1" defer></script>
+    <link rel="stylesheet" href="styles.css?v=20260929-2">
+    <script src="script.js?v=20260929-2" defer></script>
   </head>
   <body>
     <svg width="0" height="0" aria-hidden="true">
@@ -21,9 +21,6 @@
       <header class="title-banner">
         <img id="title-image" class="title-banner-image" alt="" hidden>
         <h1 id="page-title" class="title-banner-text">Parents Evening</h1>
-        <p id="image-error" class="image-error" role="alert" hidden>
-          The title image could not be loaded.
-        </p>
       </header>
 
       <section class="session-indicator" aria-live="polite" aria-atomic="true">
@@ -49,7 +46,21 @@
           >
 
           <label class="settings-label" for="logo-input">Logo image URL (optional)</label>
-          <input id="logo-input" class="settings-input" name="logo" type="url">
+          <div class="logo-input-row">
+            <input
+              id="logo-input"
+              class="settings-input"
+              name="logo"
+              type="url"
+              aria-describedby="logo-warning-message"
+            >
+            <span id="logo-warning-icon" class="logo-warning-icon" aria-hidden="true" hidden>
+              &#x26A0;
+            </span>
+          </div>
+          <p id="logo-warning-message" class="logo-warning-message" role="status" hidden>
+            The logo image could not be loaded. Check that the URL is correct and publicly accessible.
+          </p>
           <label class="settings-checkbox-row" for="match-logo-colour-input">
             <input id="match-logo-colour-input" name="matchLogoColour" type="checkbox">
             Logo matches text colour

@@ -15,6 +15,10 @@ title, logo, schedule, clock format, and display colours. Selecting **Save**
 reloads the page with the settings in the URL. Bookmark the resulting page or
 copy its URL to retain and share that configuration.
 
+The logo URL is checked when settings are opened, a saved configuration is
+selected, or the logo field loses focus. An unavailable image displays a
+warning in settings but does not prevent saving or change the URL.
+
 The **Saved configurations** section can fill in the branding settings for a
 school. Profiles are loaded from [`profiles.json`](profiles.json):
 
@@ -28,6 +32,8 @@ requires a unique `id`, display `name`, `title`, HTTP or HTTPS `logoUrl`,
 boolean `matchLogoColour`, and six-digit `background` and `foreground` colours
 including the leading `#`. You can adjust any populated settings before
 selecting **Save**.
+
+If you would like to have your school's profile added to this list, please contact me or raise an issue via github.
 
 ### URL parameters
 

@@ -23,7 +23,6 @@ const currentTime = document.querySelector("#current-time");
 const pageTitle = document.querySelector("#page-title");
 const titleImage = document.querySelector("#title-image");
 const logoColourFlood = document.querySelector("#logo-colour-flood");
-const imageError = document.querySelector("#image-error");
 const sessionIndicator = document.querySelector(".session-indicator");
 const sessionLabel = document.querySelector("#session-label");
 const sessionCount = document.querySelector("#session-count");
@@ -42,6 +41,8 @@ const settingsTestBell = document.querySelector("#settings-test-bell");
 const settingsError = document.querySelector("#settings-error");
 const titleInput = document.querySelector("#title-input");
 const logoInput = document.querySelector("#logo-input");
+const logoWarningIcon = document.querySelector("#logo-warning-icon");
+const logoWarningMessage = document.querySelector("#logo-warning-message");
 const configurationSelect = document.querySelector("#configuration-select");
 const savedConfigurationsStatus = document.querySelector("#saved-configurations-status");
 const matchLogoColourInput = document.querySelector("#match-logo-colour-input");
@@ -89,6 +90,7 @@ let lastObservedSessionIndex;
 let wakeLock = null;
 let presentationModeRequested = false;
 let presentationSyncTimer;
+let logoCheckRequestId = 0;
 
 function getConfigFromQueryString() {
   const query = new URLSearchParams(window.location.search);
@@ -214,6 +216,34 @@ function isHttpUrl(value) {
   } catch {
     return false;
   }
+}
+
+function setLogoWarning(isVisible) {
+  logoWarningIcon.hidden = !isVisible;
+  logoWarningMessage.hidden = !isVisible;
+}
+
+function checkLogoAvailability() {
+  const requestId = ++logoCheckRequestId;
+  const requestedLogo = logoInput.value.trim();
+  setLogoWarning(false);
+
+  if (!requestedLogo || !isHttpUrl(requestedLogo)) {
+    return;
+  }
+
+  const logoCheck = new Image();
+  logoCheck.addEventListener("load", () => {
+    if (requestId === logoCheckRequestId) {
+      setLogoWarning(false);
+    }
+  });
+  logoCheck.addEventListener("error", () => {
+    if (requestId === logoCheckRequestId) {
+      setLogoWarning(true);
+    }
+  });
+  logoCheck.src = requestedLogo;
 }
 
 function isCompactClockTime(value) {
@@ -399,6 +429,7 @@ function setSettingsOpen(isOpen) {
 
   if (isOpen) {
     titleInput.focus();
+    checkLogoAvailability();
   }
 }
 
@@ -629,6 +660,7 @@ function applyConfigurationSelection() {
       selectedConfiguration.dataset.matchLogoColour === "true";
     backgroundColourInput.value = selectedConfiguration.dataset.background;
     foregroundColourInput.value = selectedConfiguration.dataset.foreground;
+    checkLogoAvailability();
   }
 }
 
@@ -641,6 +673,8 @@ logoInput.addEventListener("input", () => {
   );
   configurationSelect.value = matchingConfiguration?.value ?? "";
 });
+
+logoInput.addEventListener("blur", checkLogoAvailability);
 
 fullscreenToggle.addEventListener("click", () => {
   if (document.fullscreenElement) {
@@ -757,7 +791,6 @@ settingsForm.addEventListener("submit", (event) => {
 
 titleImage.addEventListener("error", () => {
   titleImage.hidden = true;
-  imageError.hidden = false;
 });
 
 sessionBell.addEventListener("error", () => {
