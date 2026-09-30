@@ -430,6 +430,17 @@ body {
   opacity: 1;
 }
 
+.settings-information {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  opacity: 0.8;
+}
+
+.settings-information a {
+  color: inherit;
+}
+
 .settings-checkbox-row {
   display: flex;
   align-items: center;
