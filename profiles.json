@@ -55,11 +55,20 @@
   },
   {
     "id": "oxford-spires-academy",
-    "name": "Oxford Spires Academy",
+    "name": "Oxford Spires",
     "title": "Parents' Evening",
     "logoUrl": "https://www.oxfordspires.anthemtrust.uk/_site/data/files/images/logos/69C3F0C172ED9D283BAAAC79D8A5949F.png",
     "matchLogoColour": false,
     "background": "#450F62",
+    "foreground": "#FFFFFF"
+  },
+  {
+    "id": "the-oxford-academy",
+    "name": "The Oxford Academy",
+    "title": "Parents' Evening",
+    "logoUrl": "https://www.theoxfordacademy.org.uk/images/logo.svg",
+    "matchLogoColour": true,
+    "background": "#2D3582",
     "foreground": "#FFFFFF"
   },
   {
