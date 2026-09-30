@@ -49,10 +49,13 @@ If you would like to have your school's profile added to this list, please conta
 
 Settings can also be provided directly with these optional query-string
 parameters. Saving removes parameters whose values match the defaults, keeping
-the resulting URL as short as possible.
+the resulting URL as short as possible. Use a profile's `id` to apply its
+branding defaults; any other parameters in the same URL override the values
+from that profile.
 
 | Parameter | Description | Default |
 | --- | --- | --- |
+| `id` | Saved profile ID from `profiles.json` | None |
 | `title` | Page heading | `Parents Evening` |
 | `logo` | HTTP or HTTPS URL for an image displayed above the title | None |
 | `matchLogoColour` | Set to `true` to render the logo in the selected text colour | `false` |
@@ -66,6 +69,13 @@ the resulting URL as short as possible.
 Legacy URLs using `invertLogo` remain supported. Its value is interpreted as
 `matchLogoColour` and is converted to the new parameter when settings are
 saved.
+
+For example, this URL applies The Oxford Academy profile:
+
+<https://ajasmith.github.io/parents-evening/?id=oxford-academy>
+
+Adding `title=Year+8+Parents%27+Evening` to that URL changes only the title
+while retaining the profile's logo and colours.
 
 For example, this URL creates a five-minute Year 8 schedule using a 12-hour
 clock and a dark background:

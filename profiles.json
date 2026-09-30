@@ -9,7 +9,7 @@
     "foreground": "#FFFFFF"
   },
   {
-    "id": "cheney-school",
+    "id": "cheney",
     "name": "Cheney",
     "title": "Parents' Evening",
     "logoUrl": "https://www.cheneyschool.org/images/logo.png",
@@ -45,7 +45,7 @@
     "foreground": "#FFFFFF"
   },
   {
-    "id": "matthew-arnold-school",
+    "id": "matthew-arnold",
     "name": "Matthew Arnold",
     "title": "Matthew Arnold School PCE",
     "logoUrl": "https://www.maschool.org.uk/images/trees.svg",
@@ -54,7 +54,7 @@
     "foreground": "#F9B700"
   },
   {
-    "id": "oxford-spires-academy",
+    "id": "oxford-spires",
     "name": "Oxford Spires",
     "title": "Parents' Evening",
     "logoUrl": "https://www.oxfordspires.anthemtrust.uk/_site/data/files/images/logos/69C3F0C172ED9D283BAAAC79D8A5949F.png",
@@ -63,7 +63,7 @@
     "foreground": "#FFFFFF"
   },
   {
-    "id": "the-oxford-academy",
+    "id": "oxford-academy",
     "name": "The Oxford Academy",
     "title": "Parents' Evening",
     "logoUrl": "https://www.theoxfordacademy.org.uk/images/logo.svg",
@@ -72,7 +72,7 @@
     "foreground": "#FFFFFF"
   },
   {
-    "id": "the-swan-school",
+    "id": "swan",
     "name": "The Swan School",
     "title": "Parents' Evening",
     "logoUrl": "https://www.theswanschool.org.uk/images/logo.png",

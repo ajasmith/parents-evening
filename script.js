@@ -1,3 +1,4 @@
+async function initialise() {
 const defaultSchedule = {
   sessionDurationMinutes: 5,
   scheduleStartTime: "16:00",
@@ -8,6 +9,16 @@ const defaultBackgroundColour = "#2F4183";
 const defaultForegroundColour = "#FFFFFF";
 const soundEnabledStorageKey = "sessionClock.soundEnabled";
 const renderIntervalMilliseconds = 2_000;
+let savedConfigurations = [];
+let savedConfigurationsError = null;
+
+try {
+  savedConfigurations = await fetchSavedConfigurations();
+} catch (error) {
+  savedConfigurationsError = error;
+  console.error("Could not load saved configurations.", error);
+}
+
 const {
   schedule,
   title,
@@ -16,8 +27,9 @@ const {
   clockFormat,
   backgroundColour,
   foregroundColour,
+  profileId,
   configurationErrors,
-} = getConfigFromQueryString();
+} = getConfigFromQueryString(savedConfigurations, savedConfigurationsError);
 
 const currentTime = document.querySelector("#current-time");
 const pageTitle = document.querySelector("#page-title");
@@ -92,7 +104,7 @@ let presentationModeRequested = false;
 let presentationSyncTimer;
 let logoCheckRequestId = 0;
 
-function getConfigFromQueryString() {
+function getConfigFromQueryString(configurations, configurationsError) {
   const query = new URLSearchParams(window.location.search);
   const schedule = { ...defaultSchedule };
   let title = defaultTitle;
@@ -101,7 +113,9 @@ function getConfigFromQueryString() {
   let clockFormat = "24";
   let backgroundColour = defaultBackgroundColour;
   let foregroundColour = defaultForegroundColour;
+  let profileId = "";
   const configurationErrors = [];
+  const requestedProfileId = query.get("id");
   const requestedTitle = query.get("title");
   const requestedLogo = query.get("logo");
   const requestedMatchLogoColour =
@@ -113,6 +127,27 @@ function getConfigFromQueryString() {
   const requestedBackgroundColour = query.get("background");
   const requestedForegroundColour = query.get("foreground");
 
+  if (requestedProfileId !== null) {
+    const profile = configurations.find(
+      (configuration) => configuration.id === requestedProfileId,
+    );
+
+    if (profile) {
+      profileId = profile.id;
+      title = profile.title;
+      logoUrl = profile.logoUrl;
+      matchLogoColour = profile.matchLogoColour;
+      backgroundColour = profile.background;
+      foregroundColour = profile.foreground;
+    } else if (configurationsError) {
+      configurationErrors.push(
+        '“id” could not be resolved because saved configurations are unavailable.',
+      );
+    } else {
+      configurationErrors.push('“id” does not match a saved configuration.');
+    }
+  }
+
   if (requestedTitle !== null) {
     const trimmedTitle = requestedTitle.trim();
     if (trimmedTitle.length >= 1 && trimmedTitle.length <= 100) {
@@ -122,8 +157,8 @@ function getConfigFromQueryString() {
     }
   }
 
-  if (requestedLogo) {
-    if (isHttpUrl(requestedLogo)) {
+  if (requestedLogo !== null) {
+    if (requestedLogo === "" || isHttpUrl(requestedLogo)) {
       logoUrl = requestedLogo;
     } else {
       configurationErrors.push('“logo” must be an HTTP or HTTPS URL.');
@@ -205,6 +240,7 @@ function getConfigFromQueryString() {
     clockFormat,
     backgroundColour,
     foregroundColour,
+    profileId,
     configurationErrors,
   };
 }
@@ -279,29 +315,33 @@ function isSavedConfiguration(value) {
   );
 }
 
-async function loadSavedConfigurations() {
-  try {
-    const response = await fetch("profiles.json", { cache: "no-cache" });
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
+async function fetchSavedConfigurations() {
+  const response = await fetch("profiles.json", { cache: "no-cache" });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
 
-    const configurations = await response.json();
-    if (!Array.isArray(configurations) || !configurations.every(isSavedConfiguration)) {
-      throw new Error("The profiles file contains an invalid configuration.");
-    }
+  const configurations = await response.json();
+  if (!Array.isArray(configurations) || !configurations.every(isSavedConfiguration)) {
+    throw new Error("The profiles file contains an invalid configuration.");
+  }
 
-    const ids = new Set(configurations.map((configuration) => configuration.id));
-    if (ids.size !== configurations.length) {
-      throw new Error("The profiles file contains duplicate IDs.");
-    }
+  const ids = new Set(configurations.map((configuration) => configuration.id));
+  if (ids.size !== configurations.length) {
+    throw new Error("The profiles file contains duplicate IDs.");
+  }
 
+  return configurations;
+}
+
+function loadSavedConfigurations() {
+  if (!savedConfigurationsError) {
     const placeholder = document.createElement("option");
     placeholder.value = "";
     placeholder.textContent = "Choose a school";
     configurationSelect.replaceChildren(placeholder);
 
-    configurations.forEach((configuration) => {
+    savedConfigurations.forEach((configuration) => {
       const option = document.createElement("option");
       option.value = configuration.id;
       option.textContent = configuration.name;
@@ -313,24 +353,21 @@ async function loadSavedConfigurations() {
       configurationSelect.append(option);
     });
 
-    const matchingConfiguration = [...configurationSelect.options].find(
-      (option) => option.dataset.logoUrl === logoUrl,
-    );
-    configurationSelect.value = matchingConfiguration?.value ?? "";
+    configurationSelect.value = profileId;
     configurationSelect.disabled = false;
     savedConfigurationsStatus.hidden = true;
     savedConfigurationsStatus.textContent = "";
-  } catch (error) {
-    console.error("Could not load saved configurations.", error);
-    configurationSelect.replaceChildren();
-    const unavailableOption = document.createElement("option");
-    unavailableOption.textContent = "Saved configurations unavailable";
-    configurationSelect.append(unavailableOption);
-    configurationSelect.disabled = true;
-    savedConfigurationsStatus.textContent =
-      "Saved configurations could not be loaded. You can still enter settings manually.";
-    savedConfigurationsStatus.hidden = false;
+    return;
   }
+
+  configurationSelect.replaceChildren();
+  const unavailableOption = document.createElement("option");
+  unavailableOption.textContent = "Saved configurations unavailable";
+  configurationSelect.append(unavailableOption);
+  configurationSelect.disabled = true;
+  savedConfigurationsStatus.textContent =
+    "Saved configurations could not be loaded. You can still enter settings manually.";
+  savedConfigurationsStatus.hidden = false;
 }
 
 function expandClockTime(value) {
@@ -443,6 +480,12 @@ function setNonDefaultQueryParameter(searchParams, name, value, defaultValue) {
   } else {
     searchParams.set(name, value);
   }
+}
+
+function findConfigurationByLogo(logo) {
+  return savedConfigurations.find(
+    (configuration) => configuration.logoUrl === logo,
+  );
 }
 
 function formatScheduleTime(value) {
@@ -667,12 +710,16 @@ function applyConfigurationSelection() {
 configurationSelect.addEventListener("input", applyConfigurationSelection);
 configurationSelect.addEventListener("change", applyConfigurationSelection);
 
-logoInput.addEventListener("input", () => {
-  const matchingConfiguration = [...configurationSelect.options].find(
-    (option) => option.dataset.logoUrl === logoInput.value.trim(),
-  );
-  configurationSelect.value = matchingConfiguration?.value ?? "";
-});
+function selectMatchingConfiguration() {
+  if (configurationSelect.value) {
+    return;
+  }
+
+  const matchingConfiguration = findConfigurationByLogo(logoInput.value.trim());
+  configurationSelect.value = matchingConfiguration?.id ?? "";
+}
+
+logoInput.addEventListener("input", selectMatchingConfiguration);
 
 logoInput.addEventListener("blur", checkLogoAvailability);
 
@@ -736,11 +783,29 @@ settingsForm.addEventListener("submit", (event) => {
   }
 
   const url = new URL(window.location.href);
+  const selectedConfiguration =
+    findConfigurationByLogo(requestedLogo) ??
+    savedConfigurations.find(
+      (configuration) => configuration.id === configurationSelect.value,
+    );
+  const brandingDefaults = selectedConfiguration ?? {
+    title: defaultTitle,
+    logoUrl: "",
+    matchLogoColour: false,
+    background: defaultBackgroundColour,
+    foreground: defaultForegroundColour,
+  };
+  setNonDefaultQueryParameter(
+    url.searchParams,
+    "id",
+    selectedConfiguration?.id ?? "",
+    "",
+  );
   setNonDefaultQueryParameter(
     url.searchParams,
     "title",
     titleInput.value.trim(),
-    defaultTitle,
+    brandingDefaults.title,
   );
   setNonDefaultQueryParameter(
     url.searchParams,
@@ -764,13 +829,13 @@ settingsForm.addEventListener("submit", (event) => {
     url.searchParams,
     "background",
     backgroundColourInput.value.slice(1).toUpperCase(),
-    defaultBackgroundColour.slice(1),
+    brandingDefaults.background.slice(1).toUpperCase(),
   );
   setNonDefaultQueryParameter(
     url.searchParams,
     "foreground",
     foregroundColourInput.value.slice(1).toUpperCase(),
-    defaultForegroundColour.slice(1),
+    brandingDefaults.foreground.slice(1).toUpperCase(),
   );
   setNonDefaultQueryParameter(
     url.searchParams,
@@ -778,13 +843,18 @@ settingsForm.addEventListener("submit", (event) => {
     clockFormatInput.checked ? "24" : "12",
     "24",
   );
-  setNonDefaultQueryParameter(url.searchParams, "logo", requestedLogo, "");
+  setNonDefaultQueryParameter(
+    url.searchParams,
+    "logo",
+    requestedLogo,
+    brandingDefaults.logoUrl,
+  );
   url.searchParams.delete("invertLogo");
   setNonDefaultQueryParameter(
     url.searchParams,
     "matchLogoColour",
     String(matchLogoColourInput.checked),
-    "false",
+    String(brandingDefaults.matchLogoColour),
   );
   window.location.assign(url.toString());
 });
@@ -805,3 +875,6 @@ void syncPresentationMode().catch((error) => {
 });
 render();
 setInterval(render, renderIntervalMilliseconds);
+}
+
+void initialise();
